@@ -1,0 +1,19 @@
+# Dépendances et sorties de compilation
+node_modules/
+dist/
+android/build/
+promo/out/
+promo/node_modules/
+
+# Clé de signature Android : à garder en privé (permet de publier des mises à jour de l'APK)
+*.keystore
+*.jks
+
+# Fichiers binaires publiés dans les Releases GitHub (trop lourds pour le dépôt)
+*.apk
+*.exe
+
+# Divers
+.vercel/
+.claude/
+*.log

@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'">
+<title>Télécommande PPT</title>
+<style>
+  :root {
+    --bg: #111318; --panel: #1b1e26; --panel2: #252a35; --line: #2c313c; --text: #eef0f5; --muted: #8b93a7;
+    --accent: #e8643c; --accent-soft: rgba(232,100,60,.14); --ok: #3ccf7a; --ok-soft: rgba(60,207,122,.13);
+    --warn: #f2b84b; --warn-soft: rgba(242,184,75,.13); --err: #ef5350; --blue: #4f8cff;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
+    font: 14px/1.45 "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif; user-select: none; }
+  button { font: inherit; color: inherit; border: 0; cursor: pointer; border-radius: 10px; padding: 9px 14px;
+    background: var(--panel2); transition: filter .15s, transform .1s; }
+  button:hover { filter: brightness(1.18); }
+  button:active { transform: scale(.97); }
+  .primary { background: var(--accent); color: #fff; font-weight: 600; }
+  .muted { color: var(--muted); }
+  .hidden { display: none !important; }
+
+  /* Barre de titre (zone déplaçable, boutons Windows à droite) */
+  .titlebar { height: 44px; display: flex; align-items: center; gap: 10px; padding: 0 16px; -webkit-app-region: drag; }
+  .titlebar img { width: 22px; height: 22px; }
+  .titlebar b { font-size: 13px; font-weight: 600; }
+  .titlebar .credit { font-size: 12px; color: var(--muted); }
+  .titlebar .credit em { font-style: normal; color: var(--accent); font-weight: 600; }
+
+  main { height: calc(100% - 44px); padding: 4px 20px 20px; display: grid; gap: 16px;
+    grid-template-columns: minmax(340px, 0.95fr) 1.25fr; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 20px; }
+  .card h2 { margin: 0 0 4px; font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .card h2 svg { width: 18px; height: 18px; flex: none; }
+  .card p { margin: 0; }
+
+  /* Colonne connexion */
+  .connect { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 14px; }
+  .qr { width: 100%; max-width: 290px; aspect-ratio: 1; border-radius: 18px; background: #fff; padding: 10px;
+    box-shadow: 0 0 0 6px var(--accent-soft); }
+  .qr img { width: 100%; height: 100%; display: block; image-rendering: pixelated; }
+  .pin { display: flex; gap: 8px; justify-content: center; }
+  .pin span { width: 46px; height: 58px; border-radius: 12px; background: var(--panel2); display: flex; align-items: center;
+    justify-content: center; font-size: 30px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .label { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .url { display: flex; align-items: center; gap: 6px; width: 100%; background: var(--bg); border: 1px solid var(--line);
+    border-radius: 10px; padding: 4px 4px 4px 12px; }
+  .url code { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left;
+    font: 13px Consolas, monospace; color: var(--muted); user-select: text; }
+  .url button { padding: 6px 10px; font-size: 12px; }
+  select { font: inherit; color: var(--text); background: var(--panel2); border: 0; border-radius: 8px; padding: 6px 8px; }
+  .row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+
+  /* Colonne droite */
+  .side { display: grid; gap: 16px; grid-template-rows: auto auto 1fr; min-height: 0; }
+  .ppt { display: flex; gap: 16px; align-items: center; }
+  .ppt .big { width: 58px; height: 58px; border-radius: 16px; display: flex; align-items: center; justify-content: center; flex: none;
+    background: var(--panel2); color: var(--muted); }
+  .ppt .big svg { width: 30px; height: 30px; }
+  .ppt.on .big { background: var(--ok-soft); color: var(--ok); }
+  .ppt.live .big { background: rgba(239,83,80,.15); color: var(--err); }
+  .ppt.warn .big { background: var(--warn-soft); color: var(--warn); }
+  .ppt .name { font-size: 17px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ppt .info { min-width: 0; flex: 1; }
+  .badge { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 3px 10px;
+    border-radius: 99px; background: var(--panel2); color: var(--muted); margin-top: 6px; }
+  .badge.live { background: var(--err); color: #fff; }
+  .badge.ok { background: var(--ok-soft); color: var(--ok); }
+  .progress { height: 6px; border-radius: 3px; background: var(--panel2); margin-top: 12px; overflow: hidden; }
+  .progress div { height: 100%; background: var(--accent); width: 0; transition: width .3s; }
+  .alert { margin-top: 12px; padding: 10px 12px; border-radius: 10px; background: var(--warn-soft); color: var(--warn); font-size: 13px; }
+  .alert.err { background: rgba(239,83,80,.12); color: #ff8a87; }
+
+  .duo { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .stat { font-size: 34px; font-weight: 700; line-height: 1.1; margin-top: 8px; }
+  .devices { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
+  .devices span { font: 12px Consolas, monospace; background: var(--panel2); border-radius: 6px; padding: 2px 8px; color: var(--muted); }
+
+  .android { display: flex; gap: 16px; align-items: center; }
+  .android .qr { width: 132px; max-width: none; flex: none; padding: 6px; border-radius: 12px; box-shadow: none; }
+  .steps { margin: 8px 0 0; padding-left: 18px; color: var(--muted); }
+  .steps li { margin: 2px 0; }
+  .steps b { color: var(--text); font-weight: 600; }
+
+  .options { display: flex; flex-direction: column; gap: 4px; }
+  .switch { display: flex; align-items: center; gap: 12px; padding: 10px 0; cursor: pointer; }
+  .switch .t { flex: 1; }
+  .switch input { display: none; }
+  .switch i { width: 40px; height: 22px; border-radius: 11px; background: var(--panel2); position: relative; transition: background .2s; flex: none; }
+  .switch i::after { content: ''; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%;
+    background: var(--muted); transition: transform .2s, background .2s; }
+  .switch input:checked + i { background: var(--accent); }
+  .switch input:checked + i::after { transform: translateX(18px); background: #fff; }
+
+  #toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--panel2); border: 1px solid var(--line);
+    padding: 8px 16px; border-radius: 10px; font-size: 13px; opacity: 0; transition: opacity .2s; pointer-events: none; }
+  #toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+  <div class="titlebar">
+    <img src="../assets/icon.png" alt="">
+    <b>Télécommande PPT</b>
+    <span class="credit">· Réalisé par : <em>AMINE AMAHAN</em></span>
+  </div>
+
+  <main>
+    <!-- Connexion Wi-Fi -->
+    <section class="card connect">
+      <div>
+        <h2 style="justify-content:center">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 8.8a15 15 0 0 1 20 0M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0"/><circle cx="12" cy="19.5" r="1" fill="currentColor"/></svg>
+          Connecter un téléphone ou une tablette
+        </h2>
+        <p class="muted">Scannez avec l'appareil photo, sur le même Wi-Fi que ce PC</p>
+      </div>
+      <div class="qr"><img id="qr" alt="QR code de connexion"></div>
+      <div>
+        <div class="label">Code PIN</div>
+        <div class="pin" id="pin"></div>
+      </div>
+      <div class="url"><code id="url"></code><button id="copyUrl">Copier</button></div>
+      <div class="row">
+        <select id="ip" title="Réseau utilisé pour le QR code"></select>
+        <button id="newPin">Nouveau code PIN</button>
+        <button id="openRemote">Ouvrir ici</button>
+      </div>
+      <div id="netAlert" class="alert hidden"></div>
+    </section>
+
+    <div class="side">
+      <!-- État de PowerPoint -->
+      <section class="card">
+        <div class="ppt" id="ppt">
+          <div class="big">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M10 8l4 2-4 2z" fill="currentColor"/><path d="M8 20h8M12 16v4"/></svg>
+          </div>
+          <div class="info">
+            <div class="label">PowerPoint</div>
+            <div class="name" id="pptName">Recherche de PowerPoint…</div>
+            <div id="pptBadge" class="badge">—</div>
+          </div>
+        </div>
+        <div class="progress" id="progress"><div></div></div>
+        <div id="problem" class="alert hidden"></div>
+      </section>
+
+      <div class="duo">
+        <!-- Appareils -->
+        <section class="card">
+          <h2>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg>
+            Appareils connectés
+          </h2>
+          <div class="stat" id="clientCount">0</div>
+          <div class="devices" id="devices"><span class="muted">en attente…</span></div>
+        </section>
+
+        <!-- Options -->
+        <section class="card options">
+          <h2>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+            Options
+          </h2>
+          <label class="switch">
+            <span class="t">Lancer au démarrage de Windows<br><small class="muted">discrètement, dans la zone de notification</small></span>
+            <input type="checkbox" id="autostart"><i></i>
+          </label>
+          <button id="quit" style="align-self:flex-start">Quitter la télécommande</button>
+        </section>
+      </div>
+
+      <!-- Application Android -->
+      <section class="card android" id="androidCard">
+        <div class="qr"><img id="apkQr" alt="QR code de l'application Android"></div>
+        <div>
+          <h2>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 7l10 10-5 5V2l5 5L7 17"/></svg>
+            Application Android — mode Bluetooth
+          </h2>
+          <p class="muted">Sans Wi-Fi ni serveur : le téléphone devient un clavier et une souris Bluetooth (laser compris).</p>
+          <ol class="steps">
+            <li>Scannez ce code pour <b>installer l'application</b> (Android 9+).</li>
+            <li>Dans l'app : onglet Bluetooth › <b>Rendre visible</b>.</li>
+            <li>Sur le PC : <b>Paramètres › Bluetooth › Ajouter un appareil</b>.</li>
+          </ol>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <div id="toast"></div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+let state = null;
+
+const PROBLEMS = {
+  admin: 'La télécommande est lancée en administrateur et ne voit pas PowerPoint : relancez-la normalement.',
+  pptAdmin: 'PowerPoint est lancé en administrateur : fermez-le et relancez-le normalement.',
+  inaccessible: 'PowerPoint ne répond pas : cliquez une fois en dehors de la fenêtre PowerPoint.',
+};
+
+function toast(msg) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toast.timer);
+  toast.timer = setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+function render(s) {
+  state = s;
+  if (s.qr) $('qr').src = s.qr;
+  $('url').textContent = s.url.replace(/^http:\/\//, '');
+  $('pin').innerHTML = '';
+  for (const d of String(s.pin)) {
+    const span = document.createElement('span');
+    span.textContent = d;
+    $('pin').append(span);
+  }
+
+  // Réseaux
+  const sel = $('ip');
+  const opts = s.addresses.map((a) => `${a.address}|${a.name}`).join(',');
+  if (sel.dataset.opts !== opts) {
+    sel.dataset.opts = opts;
+    sel.innerHTML = '';
+    for (const a of s.addresses) {
+      const o = document.createElement('option');
+      o.value = a.address;
+      o.textContent = `${a.name} · ${a.address}`;
+      sel.append(o);
+    }
+  }
+  sel.value = s.ip || '';
+  sel.classList.toggle('hidden', s.addresses.length < 2);
+  const net = $('netAlert');
+  net.classList.toggle('hidden', !(s.error || s.addresses.length === 0));
+  net.classList.toggle('err', !!s.error);
+  net.textContent = s.error || 'Aucun réseau détecté : connectez ce PC au Wi-Fi (ou activez le point d\'accès mobile).';
+
+  // PowerPoint
+  const st = s.status;
+  const card = $('ppt');
+  const badge = $('pptBadge');
+  card.className = 'ppt';
+  badge.className = 'badge';
+  const bar = $('progress');
+  if (st && st.presentation) {
+    $('pptName').textContent = st.presentation.replace(/\.pptx?m?$/i, '');
+    if (st.inShow) {
+      card.classList.add('live');
+      badge.classList.add('live');
+      badge.textContent = st.ended ? 'Fin du diaporama'
+        : st.state === 'black' ? 'Écran noir' : st.state === 'white' ? 'Écran blanc'
+        : `● En direct · diapositive ${st.slide} / ${st.total}`;
+    } else {
+      card.classList.add('on');
+      badge.classList.add('ok');
+      badge.textContent = `Prêt · diapositive ${st.slide} / ${st.total}`;
+    }
+    bar.classList.remove('hidden');
+    bar.firstElementChild.style.width = `${(st.slide / Math.max(1, st.total)) * 100}%`;
+  } else {
+    if (s.problem) card.classList.add('warn');
+    $('pptName').textContent = st && st.powerpoint ? 'Aucune présentation ouverte' : 'PowerPoint n\'est pas ouvert';
+    badge.textContent = 'Ouvrez votre présentation sur ce PC';
+    bar.classList.add('hidden');
+  }
+  $('problem').classList.toggle('hidden', !s.problem);
+  $('problem').textContent = PROBLEMS[s.problem] || '';
+
+  // Appareils
+  $('clientCount').textContent = s.clients.length;
+  $('devices').innerHTML = '';
+  if (s.clients.length === 0) {
+    $('devices').innerHTML = '<span class="muted">en attente…</span>';
+  } else {
+    for (const ip of s.clients) {
+      const span = document.createElement('span');
+      span.textContent = ip;
+      $('devices').append(span);
+    }
+  }
+
+  // Android
+  $('androidCard').classList.toggle('hidden', !s.apkAvailable);
+  if (s.apkQr) $('apkQr').src = s.apkQr;
+  $('autostart').checked = s.autostart;
+}
+
+$('copyUrl').onclick = async () => { await window.remote.copy(state.url); toast('Adresse copiée'); };
+$('newPin').onclick = async () => { await window.remote.newPin(); toast('Nouveau code PIN : reconnectez les appareils'); };
+$('openRemote').onclick = () => window.remote.openRemote();
+$('ip').onchange = (e) => window.remote.setIp(e.target.value);
+$('autostart').onchange = (e) => window.remote.setAutostart(e.target.checked);
+$('quit').onclick = () => window.remote.quit();
+
+window.remote.onState(render);
+window.remote.getState().then(render);
+</script>
+</body>
+</html>

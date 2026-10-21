@@ -1,0 +1,532 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#111318">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg">
+<title>Télécommande PPT</title>
+<style>
+  :root {
+    --bg: #111318; --panel: #1b1e26; --panel2: #252a35; --text: #eef0f5; --muted: #8b93a7;
+    --accent: #e8643c; --accent2: #ff8a5c; --ok: #3ccf7a; --warn: #f2b84b; --err: #ef5350;
+    --radius: 16px;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
+    font: 16px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; overscroll-behavior: none; }
+  button { font: inherit; color: inherit; border: 0; background: var(--panel2); border-radius: 12px;
+    padding: 10px 14px; cursor: pointer; user-select: none; touch-action: manipulation; }
+  button:active { transform: scale(.97); filter: brightness(1.2); }
+  button:disabled { opacity: .35; }
+  .hidden { display: none !important; }
+
+  /* --- Écran PIN --- */
+  #login { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 18px; padding: 24px; text-align: center; }
+  #login h1 { margin: 0; font-size: 24px; }
+  #login p { margin: 0; color: var(--muted); }
+  #pinInput { font-size: 32px; letter-spacing: 12px; text-align: center; width: 200px; padding: 12px;
+    border-radius: 12px; border: 2px solid var(--panel2); background: var(--panel); color: var(--text); }
+  #pinInput:focus { outline: none; border-color: var(--accent); }
+  #pinBtn { background: var(--accent); padding: 14px 40px; font-weight: 600; }
+  #loginErr { color: var(--err); min-height: 1.4em; }
+
+  /* --- Application --- */
+  #app { display: flex; flex-direction: column; height: 100%;
+    padding: max(12px, env(safe-area-inset-top)) 16px max(12px, env(safe-area-inset-bottom)); gap: 12px; }
+  header { display: flex; align-items: center; gap: 10px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--err); flex: none; }
+  .dot.on { background: var(--ok); }
+  #presName { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    font-weight: 600; }
+  #clock { color: var(--muted); font-variant-numeric: tabular-nums; }
+
+  #main { flex: 1; min-height: 0; display: grid; gap: 12px; grid-template-rows: auto auto 1fr; }
+  @media (min-width: 820px) and (orientation: landscape) {
+    #main { grid-template-columns: 1.3fr 1fr; grid-template-rows: auto 1fr; }
+    #stage { grid-row: 1 / 3; }
+  }
+
+  #stage { position: relative; background: #000; border-radius: var(--radius); overflow: hidden;
+    aspect-ratio: 16 / 9; width: 100%; max-height: 42vh; margin: 0 auto; touch-action: pan-y; }
+  @media (min-width: 820px) and (orientation: landscape) { #stage { max-height: none; align-self: start; } }
+  #thumb { width: 100%; height: 100%; object-fit: contain; display: block; transition: opacity .2s; }
+  #thumb.loading { opacity: .4; }
+  #stageMsg { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    color: var(--muted); text-align: center; padding: 16px; }
+  #stateBadge { position: absolute; top: 10px; left: 10px; padding: 4px 10px; border-radius: 99px;
+    font-size: 13px; font-weight: 600; background: rgba(0,0,0,.7); }
+  #stateBadge.live { background: var(--err); }
+  #stage.laser { touch-action: none; box-shadow: 0 0 0 3px #ff2d2d; cursor: crosshair; }
+  #laserDot { position: absolute; width: 18px; height: 18px; margin: -9px 0 0 -9px; border-radius: 50%;
+    background: #ff2d2d; box-shadow: 0 0 12px 4px rgba(255,45,45,.7); pointer-events: none; }
+  #laserHint { position: absolute; left: 50%; top: 10px; transform: translateX(-50%); padding: 4px 12px; border-radius: 99px;
+    background: rgba(255,45,45,.9); font-size: 13px; font-weight: 600; white-space: nowrap; pointer-events: none; }
+  #tools button#btnLaser.active { background: #ff2d2d; color: #fff; }
+  #counter { position: absolute; bottom: 10px; right: 10px; padding: 4px 10px; border-radius: 99px;
+    background: rgba(0,0,0,.7); font-variant-numeric: tabular-nums; font-weight: 600; }
+
+  #info { display: flex; gap: 12px; align-items: stretch; }
+  #titles { flex: 1; min-width: 0; background: var(--panel); border-radius: var(--radius); padding: 10px 14px; }
+  #slideTitle { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #nextTitle { color: var(--muted); font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #timer { background: var(--panel); border-radius: var(--radius); padding: 8px 12px; display: flex;
+    flex-direction: column; align-items: center; justify-content: center; min-width: 96px; }
+  #timerVal { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  #timerVal.running { color: var(--ok); }
+  #timer small { color: var(--muted); font-size: 11px; }
+
+  #notesBox { min-height: 0; background: var(--panel); border-radius: var(--radius); display: flex;
+    flex-direction: column; overflow: hidden; }
+  #notesHead { display: flex; align-items: center; gap: 6px; padding: 8px 10px 8px 14px;
+    color: var(--muted); font-size: 13px; text-transform: uppercase; letter-spacing: .06em; }
+  #notesHead span { flex: 1; }
+  #notesHead button { padding: 4px 10px; font-size: 14px; }
+  #notes { flex: 1; overflow-y: auto; padding: 0 14px 14px; white-space: pre-wrap; font-size: var(--notes-size, 18px); }
+  #notes.empty { color: var(--muted); font-style: italic; }
+
+  #tools { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; }
+  #tools::-webkit-scrollbar { display: none; }
+  #tools button { flex: none; font-size: 14px; padding: 10px 12px; }
+  #tools button.active { background: var(--warn); color: #000; }
+  #btnStart { background: var(--accent); font-weight: 600; }
+  #btnEnd { background: #3a2226; color: #ff9a9a; }
+
+  #nav { display: grid; grid-template-columns: 1fr 2fr; gap: 12px; height: 22vh; min-height: 110px; max-height: 180px; }
+  #nav button { font-size: 40px; border-radius: 20px; display: flex; align-items: center; justify-content: center; }
+  #btnNext { background: var(--accent); }
+  #nav svg { width: 44px; height: 44px; }
+
+  /* --- Grille des diapositives --- */
+  #grid { position: fixed; inset: 0; background: rgba(10,11,14,.97); z-index: 10; display: flex; flex-direction: column;
+    padding: max(12px, env(safe-area-inset-top)) 16px max(12px, env(safe-area-inset-bottom)); }
+  #gridHead { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  #gridHead h2 { flex: 1; margin: 0; font-size: 18px; }
+  #gridList { flex: 1; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px; align-content: start; }
+  .cell { position: relative; padding: 0; overflow: hidden; aspect-ratio: 16/9; background: #000; border: 2px solid transparent; }
+  .cell.current { border-color: var(--accent); }
+  .cell img { width: 100%; height: 100%; object-fit: contain; display: block; }
+  .cell span { position: absolute; left: 6px; bottom: 6px; background: rgba(0,0,0,.75); padding: 1px 8px;
+    border-radius: 99px; font-size: 13px; font-weight: 600; }
+
+  .credit { text-align: center; color: var(--muted); font-size: 12px; }
+  .credit b { color: var(--accent); }
+
+  #toast { position: fixed; left: 50%; bottom: 30%; transform: translateX(-50%); background: var(--err);
+    padding: 10px 18px; border-radius: 12px; z-index: 20; max-width: 90%; text-align: center; transition: opacity .3s; }
+</style>
+</head>
+<body>
+
+<div id="login" class="hidden">
+  <h1>Télécommande PowerPoint</h1>
+  <p>Saisissez le code PIN affiché sur le PC</p>
+  <input id="pinInput" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="off">
+  <button id="pinBtn">Connexion</button>
+  <div id="loginErr"></div>
+  <div class="credit">Réalisé par : <b>AMINE AMAHAN</b></div>
+</div>
+
+<div id="app" class="hidden">
+  <header>
+    <div class="dot" id="dot"></div>
+    <div id="presName">Connexion…</div>
+    <div id="clock"></div>
+  </header>
+
+  <div id="main">
+    <div id="stage">
+      <img id="thumb" alt="" class="hidden">
+      <div id="stageMsg">En attente de PowerPoint…</div>
+      <div id="stateBadge" class="hidden"></div>
+      <div id="counter" class="hidden"></div>
+      <div id="laserDot" class="hidden"></div>
+      <div id="laserHint" class="hidden">Touchez l'aperçu pour pointer</div>
+    </div>
+
+    <div id="info">
+      <div id="titles">
+        <div id="slideTitle">—</div>
+        <div id="nextTitle"></div>
+      </div>
+      <div id="timer" title="Appui : démarrer/pause — appui long : remise à zéro">
+        <div id="timerVal">00:00</div>
+        <small>chrono</small>
+      </div>
+    </div>
+
+    <div id="notesBox">
+      <div id="notesHead">
+        <span>Notes</span>
+        <button id="fontMinus" aria-label="Réduire le texte">A−</button>
+        <button id="fontPlus" aria-label="Agrandir le texte">A+</button>
+      </div>
+      <div id="notes" class="empty">Aucune note</div>
+    </div>
+  </div>
+
+  <div id="tools">
+    <button id="btnStart">▶ Lancer</button>
+    <button id="btnStartHere">▶ Depuis ici</button>
+    <button id="btnEnd" class="hidden">■ Terminer</button>
+    <button id="btnLaser">● Laser</button>
+    <button id="btnBlack">Écran noir</button>
+    <button id="btnWhite">Écran blanc</button>
+    <button id="btnGrid">▦ Diapos</button>
+    <button id="btnFirst">⏮ Début</button>
+  </div>
+
+  <div id="nav">
+    <button id="btnPrev" aria-label="Précédente">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <button id="btnNext" aria-label="Suivante">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+    </button>
+  </div>
+  <div class="credit">Réalisé par : <b>AMINE AMAHAN</b></div>
+</div>
+
+<div id="grid" class="hidden">
+  <div id="gridHead">
+    <h2>Aller à la diapositive</h2>
+    <button id="gridClose">Fermer</button>
+  </div>
+  <div id="gridList"></div>
+</div>
+
+<div id="toast" class="hidden"></div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch {} },
+};
+
+// ---------- PIN ----------
+const params = new URLSearchParams(location.search);
+let pin = params.get('pin') || store.get('pin');
+if (params.get('pin')) {
+  store.set('pin', pin);
+  history.replaceState(null, '', location.pathname); // retire le PIN de la barre d'adresse
+}
+
+function showLogin(msg) {
+  $('app').classList.add('hidden');
+  $('login').classList.remove('hidden');
+  $('loginErr').textContent = msg || '';
+  $('pinInput').focus();
+}
+$('pinBtn').onclick = () => {
+  pin = $('pinInput').value.trim();
+  if (!pin) return;
+  store.set('pin', pin);
+  connect();
+};
+$('pinInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('pinBtn').click(); });
+
+// ---------- WebSocket ----------
+let ws, status = null, reconnectTimer, authFailed = false;
+
+function connect() {
+  clearTimeout(reconnectTimer);
+  authFailed = false;
+  const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+  ws = new WebSocket(`${proto}://${location.host}/ws?pin=${encodeURIComponent(pin)}`);
+  ws.onmessage = (ev) => {
+    const msg = JSON.parse(ev.data);
+    if (msg.type === 'auth') {
+      if (!msg.ok) { authFailed = true; store.set('pin', ''); showLogin('Code PIN incorrect'); return; }
+      $('login').classList.add('hidden');
+      $('app').classList.remove('hidden');
+      $('dot').classList.add('on');
+      send('status');
+    } else if (msg.type === 'status') {
+      render(msg.status);
+    } else if (msg.type === 'error') {
+      toast(msg.message);
+    }
+  };
+  ws.onclose = () => {
+    $('dot').classList.remove('on');
+    if (!authFailed) reconnectTimer = setTimeout(connect, 1500);
+  };
+}
+
+function send(cmd, arg) {
+  if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ cmd, arg }));
+  else toast('Non connecté');
+}
+
+// ---------- Rendu ----------
+let shownThumb = '';
+
+function render(s) {
+  status = s;
+  const p = s && s.presentation;
+  const PROBLEMS = {
+    admin: 'Relancez Télécommande PPT normalement (pas en administrateur)',
+    pptAdmin: 'PowerPoint est lancé en administrateur : relancez-le normalement',
+    inaccessible: 'PowerPoint ne répond pas : cliquez une fois en dehors de PowerPoint',
+  };
+  $('presName').textContent = p ? s.presentation.replace(/\.pptx?m?$/i, '') :
+    (s && s.problem && PROBLEMS[s.problem]) ||
+    (s && s.powerpoint ? 'PowerPoint ouvert — aucune présentation' : 'PowerPoint n\'est pas ouvert');
+
+  const has = !!p;
+  ['btnPrev', 'btnNext', 'btnStart', 'btnStartHere', 'btnGrid', 'btnFirst'].forEach((id) => $(id).disabled = !has);
+  $('btnBlack').disabled = $('btnWhite').disabled = $('btnLaser').disabled = !(has && s.inShow);
+  if (laserMode && !(has && s.inShow)) setLaserMode(false);
+  $('btnStart').classList.toggle('hidden', has && s.inShow);
+  $('btnStartHere').classList.toggle('hidden', has && s.inShow);
+  $('btnEnd').classList.toggle('hidden', !(has && s.inShow));
+  $('btnBlack').classList.toggle('active', has && s.state === 'black');
+  $('btnWhite').classList.toggle('active', has && s.state === 'white');
+
+  if (!has) {
+    $('thumb').classList.add('hidden');
+    $('counter').classList.add('hidden');
+    $('stateBadge').classList.add('hidden');
+    $('stageMsg').classList.remove('hidden');
+    $('stageMsg').textContent = (s && s.problem && PROBLEMS[s.problem]) || 'Ouvrez une présentation sur le PC';
+    $('slideTitle').textContent = '—';
+    $('nextTitle').textContent = '';
+    setNotes('');
+    shownThumb = '';
+    return;
+  }
+
+  $('counter').classList.remove('hidden');
+  $('counter').textContent = `${s.slide} / ${s.total}`;
+
+  const badge = $('stateBadge');
+  badge.classList.remove('hidden');
+  badge.classList.toggle('live', s.inShow && s.state === 'running');
+  badge.textContent = !s.inShow ? 'Édition' :
+    s.ended ? 'Fin du diaporama' :
+    s.state === 'black' ? 'Écran noir' : s.state === 'white' ? 'Écran blanc' : '● En direct';
+
+  $('slideTitle').textContent = s.title || `Diapositive ${s.slide}`;
+  $('nextTitle').textContent = s.slide < s.total ? `Suivante : ${s.nextTitle || 'diapositive ' + (s.slide + 1)}` : 'Dernière diapositive';
+  setNotes(s.notes);
+
+  const key = `${s.path}#${s.slide}`;
+  if (s.ended) {
+    $('thumb').classList.add('hidden');
+    $('stageMsg').classList.remove('hidden');
+    $('stageMsg').textContent = 'Fin du diaporama — appuyez sur Suivante pour quitter';
+    shownThumb = '';
+  } else if (key !== shownThumb) {
+    shownThumb = key;
+    loadThumb(s.slide, key);
+  }
+}
+
+function thumbUrl(n) {
+  return `/thumb/${n}?pin=${encodeURIComponent(pin)}&p=${encodeURIComponent(status.path || '')}`;
+}
+
+function loadThumb(n, key) {
+  const img = $('thumb');
+  img.classList.add('loading');
+  const next = new Image();
+  next.onload = () => {
+    if (shownThumb !== key) return;
+    img.src = next.src;
+    img.classList.remove('hidden', 'loading');
+    $('stageMsg').classList.add('hidden');
+  };
+  next.onerror = () => img.classList.remove('loading');
+  next.src = thumbUrl(n);
+}
+
+function setNotes(text) {
+  const el = $('notes');
+  const t = (text || '').replace(/\r\n?/g, '\n').replace(/\v/g, '\n').trim();
+  el.textContent = t || 'Aucune note';
+  el.classList.toggle('empty', !t);
+  el.scrollTop = 0;
+}
+
+// ---------- Actions ----------
+function haptic() { if (navigator.vibrate) navigator.vibrate(15); }
+function next() { haptic(); send('next'); }
+function prev() { haptic(); send('prev'); }
+
+$('btnNext').onclick = next;
+$('btnPrev').onclick = prev;
+$('btnStart').onclick = () => { send('start', 'first'); startTimerIfIdle(); };
+$('btnStartHere').onclick = () => { send('start', 'current'); startTimerIfIdle(); };
+$('btnEnd').onclick = () => { if (confirm('Terminer le diaporama ?')) send('end'); };
+$('btnBlack').onclick = () => send('black');
+$('btnWhite').onclick = () => send('white');
+$('btnFirst').onclick = () => send('goto', 1);
+
+// ---------- Pointeur laser ----------
+// En mode laser, toucher l'aperçu place le laser de PowerPoint au même endroit sur l'écran.
+let laserMode = false, laserDown = false, laserFrame = 0, laserPoint = null;
+
+function setLaserMode(on) {
+  laserMode = on;
+  $('btnLaser').classList.toggle('active', on);
+  $('stage').classList.toggle('laser', on);
+  $('laserHint').classList.toggle('hidden', !on);
+  if (!on) endLaser();
+}
+$('btnLaser').onclick = () => { haptic(); setLaserMode(!laserMode); };
+
+// Position du doigt dans la diapositive (0..1), en tenant compte des bandes de l'aperçu
+function slidePoint(e) {
+  const img = $('thumb');
+  const r = $('stage').getBoundingClientRect();
+  const ratio = img.naturalWidth && img.naturalHeight ? img.naturalWidth / img.naturalHeight : 16 / 9;
+  let w = r.width, h = r.width / ratio;
+  if (h > r.height) { h = r.height; w = h * ratio; }
+  const left = (r.width - w) / 2, top = (r.height - h) / 2;
+  const x = Math.min(1, Math.max(0, (e.clientX - r.left - left) / w));
+  const y = Math.min(1, Math.max(0, (e.clientY - r.top - top) / h));
+  const dot = $('laserDot');
+  dot.style.left = (left + x * w) + 'px';
+  dot.style.top = (top + y * h) + 'px';
+  return { x: +x.toFixed(4), y: +y.toFixed(4) };
+}
+
+function endLaser() {
+  if (!laserDown) return;
+  laserDown = false;
+  cancelAnimationFrame(laserFrame);
+  $('laserDot').classList.add('hidden');
+  send('laserOff');
+}
+
+$('stage').addEventListener('pointerdown', (e) => {
+  if (!laserMode) return;
+  e.preventDefault();
+  $('stage').setPointerCapture(e.pointerId);
+  laserDown = true;
+  $('laserDot').classList.remove('hidden');
+  $('laserHint').classList.add('hidden');
+  haptic();
+  send('laserOn', slidePoint(e));
+});
+$('stage').addEventListener('pointermove', (e) => {
+  if (!laserDown) return;
+  laserPoint = slidePoint(e);
+  if (!laserFrame) laserFrame = requestAnimationFrame(() => { laserFrame = 0; if (laserDown && laserPoint) send('laser', laserPoint); });
+});
+['pointerup', 'pointercancel'].forEach((t) => $('stage').addEventListener(t, () => {
+  endLaser();
+  if (laserMode) $('laserHint').classList.remove('hidden');
+}));
+
+// Balayage sur l'aperçu
+let touchX = null, touchY = null;
+$('stage').addEventListener('touchstart', (e) => { touchX = laserMode ? null : e.touches[0].clientX; touchY = e.touches[0].clientY; }, { passive: true });
+$('stage').addEventListener('touchend', (e) => {
+  if (touchX === null) return;
+  const dx = e.changedTouches[0].clientX - touchX;
+  const dy = e.changedTouches[0].clientY - touchY;
+  touchX = null;
+  if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) dx < 0 ? next() : prev();
+});
+
+// Clavier (tablette avec clavier, télécommande Bluetooth)
+document.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'INPUT') return;
+  if (['ArrowRight', 'ArrowDown', 'PageDown', ' ', 'Enter'].includes(e.key)) { e.preventDefault(); next(); }
+  if (['ArrowLeft', 'ArrowUp', 'PageUp', 'Backspace'].includes(e.key)) { e.preventDefault(); prev(); }
+  if (e.key === 'b' || e.key === '.') send('black');
+  if (e.key === 'l') setLaserMode(!laserMode);
+});
+
+// Taille des notes
+let notesSize = Number(store.get('notesSize')) || 18;
+function applyNotesSize() { document.documentElement.style.setProperty('--notes-size', notesSize + 'px'); store.set('notesSize', notesSize); }
+$('fontPlus').onclick = () => { notesSize = Math.min(40, notesSize + 2); applyNotesSize(); };
+$('fontMinus').onclick = () => { notesSize = Math.max(12, notesSize - 2); applyNotesSize(); };
+applyNotesSize();
+
+// ---------- Grille ----------
+$('btnGrid').onclick = () => {
+  if (!status || !status.presentation) return;
+  const list = $('gridList');
+  list.innerHTML = '';
+  for (let i = 1; i <= status.total; i++) {
+    const b = document.createElement('button');
+    b.className = 'cell' + (i === status.slide ? ' current' : '');
+    const img = document.createElement('img');
+    img.loading = 'lazy';
+    img.src = thumbUrl(i);
+    img.alt = `Diapositive ${i}`;
+    const n = document.createElement('span');
+    n.textContent = i;
+    b.append(img, n);
+    b.onclick = () => { send('goto', i); $('grid').classList.add('hidden'); };
+    list.append(b);
+  }
+  $('grid').classList.remove('hidden');
+  const cur = list.querySelector('.current');
+  if (cur) cur.scrollIntoView({ block: 'center' });
+};
+$('gridClose').onclick = () => $('grid').classList.add('hidden');
+
+// ---------- Chrono et horloge ----------
+let timerStart = null, timerElapsed = 0, timerTick;
+function fmt(ms) {
+  const s = Math.floor(ms / 1000), h = Math.floor(s / 3600), m = Math.floor(s / 60) % 60, sec = s % 60;
+  const mm = String(m).padStart(2, '0'), ss = String(sec).padStart(2, '0');
+  return h ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
+}
+function updateTimer() {
+  const ms = timerElapsed + (timerStart ? Date.now() - timerStart : 0);
+  $('timerVal').textContent = fmt(ms);
+  $('timerVal').classList.toggle('running', !!timerStart);
+}
+function toggleTimer() {
+  if (timerStart) { timerElapsed += Date.now() - timerStart; timerStart = null; }
+  else timerStart = Date.now();
+  updateTimer();
+}
+function startTimerIfIdle() { if (!timerStart && timerElapsed === 0) toggleTimer(); }
+let pressTimer, longPressed = false;
+$('timer').addEventListener('pointerdown', () => {
+  longPressed = false;
+  pressTimer = setTimeout(() => { longPressed = true; timerStart = null; timerElapsed = 0; updateTimer(); haptic(); }, 700);
+});
+$('timer').addEventListener('pointerup', () => { clearTimeout(pressTimer); if (!longPressed) toggleTimer(); });
+$('timer').addEventListener('pointerleave', () => clearTimeout(pressTimer));
+setInterval(() => {
+  updateTimer();
+  $('clock').textContent = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+}, 500);
+
+// ---------- Divers ----------
+let toastTimer;
+function toast(msg) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.remove('hidden');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.add('hidden'), 2500);
+}
+
+// Garder l'écran allumé pendant la présentation
+let wakeLock = null;
+async function keepAwake() {
+  try { if ('wakeLock' in navigator && !wakeLock) { wakeLock = await navigator.wakeLock.request('screen'); wakeLock.onrelease = () => wakeLock = null; } } catch {}
+}
+document.addEventListener('click', keepAwake, { once: true });
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') { keepAwake(); if (!ws || ws.readyState > 1) connect(); }
+});
+
+if (pin) connect(); else showLogin();
+</script>
+</body>
+</html>

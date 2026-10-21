@@ -1,0 +1,61 @@
+{
+  "name": "ppt-remote",
+  "productName": "Télécommande PPT",
+  "version": "1.0.0",
+  "description": "Télécommande PowerPoint depuis un téléphone ou une tablette",
+  "author": "AMINE AMAHAN",
+  "main": "desktop/main.js",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "server": "node server.js",
+    "dist": "electron-builder --win nsis"
+  },
+  "dependencies": {
+    "qrcode": "1.5.4",
+    "qrcode-terminal": "^0.12.0",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "electron": "44.6.0",
+    "electron-builder": "26.17.0"
+  },
+  "build": {
+    "appId": "com.pptremote.desktop",
+    "productName": "Télécommande PPT",
+    "copyright": "Réalisé par AMINE AMAHAN",
+    "directories": { "output": "dist", "buildResources": "build" },
+    "files": [
+      "server.js",
+      "bridge.ps1",
+      "public/**",
+      "desktop/**",
+      "package.json"
+    ],
+    "asarUnpack": ["bridge.ps1"],
+    "extraResources": [
+      { "from": "Telecommande-PPT.apk", "to": "Telecommande-PPT.apk" }
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "build/icon.ico",
+      "executableName": "Telecommande-PPT",
+      "artifactName": "Telecommande-PPT-Setup-${version}.exe"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": true,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Télécommande PPT",
+      "runAfterFinish": true,
+      "installerLanguages": ["fr_FR"],
+      "language": "1036",
+      "include": "build/installer.nsh",
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "uninstallDisplayName": "Télécommande PPT"
+    }
+  }
+}
