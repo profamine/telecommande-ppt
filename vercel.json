@@ -3,6 +3,16 @@
   "installCommand": "echo \"Site statique : pas de dépendances à installer\"",
   "buildCommand": "",
   "outputDirectory": "website",
+  "rewrites": [
+    {
+      "source": "/telecharger/windows",
+      "destination": "https://github.com/profamine/telecommande-ppt/releases/download/v1.0.0/Telecommande-PPT-Setup.exe"
+    },
+    {
+      "source": "/telecharger/android",
+      "destination": "https://github.com/profamine/telecommande-ppt/releases/download/v1.0.0/Telecommande-PPT.apk"
+    }
+  ],
   "headers": [
     {
       "source": "/",
