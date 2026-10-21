@@ -24,7 +24,8 @@
   html { scroll-behavior: smooth; }
   body { margin: 0; background: var(--bg); color: var(--text); font: 17px/1.6 "Segoe UI", system-ui, -apple-system, Roboto, sans-serif; }
   a { color: inherit; text-decoration: none; }
-  img, video { max-width: 100%; display: block; }
+  /* height: auto : sans lui, l'attribut height fige la hauteur et l'image se déforme */
+  img, video { max-width: 100%; height: auto; display: block; }
   .wrap { max-width: 1160px; margin: 0 auto; padding: 0 24px; }
   .muted { color: var(--muted); }
 
@@ -36,7 +37,7 @@
   .brand img { width: 32px; height: 32px; }
   nav .links { display: flex; gap: 22px; margin-left: auto; font-size: 15px; color: var(--muted); }
   nav .links a:hover { color: var(--text); }
-  @media (max-width: 720px) { nav .links a:not(.cta) { display: none; } }
+  @media (max-width: 880px) { nav .links a:not(.cta) { display: none; } }
 
   .btn { display: inline-flex; align-items: center; gap: 10px; padding: 14px 22px; border-radius: 14px; font-weight: 600; font-size: 16px;
     background: var(--panel2); border: 1px solid var(--line); transition: transform .15s, filter .15s; }
@@ -60,10 +61,11 @@
   .actions { display: flex; flex-wrap: wrap; gap: 14px; }
   .reqs { margin-top: 18px; font-size: 14px; color: var(--muted); }
   .shots { position: relative; min-height: 420px; }
+  .shots picture { display: block; }
   .shots .win { border-radius: 16px; border: 1px solid var(--line); box-shadow: 0 30px 80px rgba(0,0,0,.55); width: 100%; }
   .shots .phone { position: absolute; right: -10px; bottom: -30px; width: 34%; border-radius: 28px; border: 6px solid #05060a;
     box-shadow: 0 30px 70px rgba(0,0,0,.6), 0 0 0 2px #2c313c; }
-  @media (max-width: 900px) { .shots { min-height: 0; margin-bottom: 30px; } .shots .phone { right: 4px; } }
+  @media (max-width: 900px) { .shots { min-height: 0; margin-bottom: 40px; } .shots .phone { right: 4px; width: 24%; bottom: -40px; border-width: 4px; border-radius: 20px; } }
 
   section { padding: 80px 0; }
   .center { text-align: center; }
@@ -152,7 +154,10 @@
       <p class="reqs">Fonctionne avec Microsoft PowerPoint sur Windows · aucun compte, aucune publicité</p>
     </div>
     <div class="shots">
-      <img class="win" src="assets/app-windows.jpg" alt="Fenêtre de l'application Télécommande PPT sur Windows, avec QR code et état de PowerPoint" width="1302" height="878">
+      <picture>
+        <source srcset="assets/app-windows.webp" type="image/webp">
+        <img class="win" src="assets/app-windows.jpg" alt="Fenêtre de l'application Télécommande PPT sur Windows, avec QR code et état de PowerPoint" width="2080" height="1400">
+      </picture>
       <img class="phone" src="assets/app-android-wifi.jpg" alt="Télécommande sur le téléphone : aperçu de la diapositive et notes" loading="lazy">
     </div>
   </div>
