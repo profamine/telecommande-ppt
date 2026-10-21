@@ -3,6 +3,7 @@
   "installCommand": "echo \"Site statique : pas de dépendances à installer\"",
   "buildCommand": "",
   "outputDirectory": "website",
+  "cleanUrls": true,
   "rewrites": [
     {
       "source": "/telecharger/windows",

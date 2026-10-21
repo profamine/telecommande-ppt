@@ -147,7 +147,9 @@ export const usePress = (taps: number[]) => {
   return { press, ripple };
 };
 
-export const BtRemoteScreen: React.FC<{ taps: number[]; timerFrom?: number }> = ({ taps, timerFrom = 0 }) => {
+export const BtRemoteScreen: React.FC<{ taps: number[]; timerFrom?: number; laser?: boolean; gyro?: boolean }> = ({
+  taps, timerFrom = 0, laser = false, gyro = false,
+}) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const { press, ripple } = usePress(taps);
@@ -172,10 +174,23 @@ export const BtRemoteScreen: React.FC<{ taps: number[]; timerFrom?: number }> = 
           <Pill label="Écran noir" />
           <Pill label="Écran blanc" />
         </div>
-        <div style={{ flex: 1, background: C.panel, borderRadius: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.ok, fontSize: 92, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
-          {timer}
+        {/* Chrono + choix de visée, puis pavé laser (comme dans l'application) */}
+        <div style={{ display: 'flex', gap: 12, height: 76 }}>
+          <div style={{ flex: 1, background: C.panel, borderRadius: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.ok, fontSize: 40, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
+            {timer}
+          </div>
+          <div style={{ flex: 1, background: C.panel2, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.text, fontSize: 18, fontWeight: 600 }}>
+            {gyro ? 'Visée : gyroscope' : 'Visée : doigt'}
+          </div>
         </div>
-        <div style={{ display: 'flex', gap: 14, height: 230 }}>
+        <div style={{ position: 'relative', flex: 1, borderRadius: 22, background: laser ? '#4A1A1C' : '#2A1416', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: laser ? '#FF5A5A' : '#FF9A9A', fontSize: 22, fontWeight: 600, textAlign: 'center', lineHeight: 1.35, overflow: 'hidden' }}>
+          <div>● {laser ? 'Laser actif' : 'LASER'}</div>
+          <div style={{ fontSize: 17, fontWeight: 400 }}>{laser ? (gyro ? "visez l'écran avec le téléphone" : 'glissez le doigt') : 'maintenez et glissez le doigt'}</div>
+          {laser && !gyro && (
+            <div style={{ position: 'absolute', left: '62%', top: '58%', width: 70, height: 70, marginLeft: -35, marginTop: -35, borderRadius: '50%', background: 'rgba(255,255,255,.18)', boxShadow: '0 0 0 10px rgba(255,255,255,.06)' }} />
+          )}
+        </div>
+        <div style={{ display: 'flex', gap: 14, height: 190 }}>
           <div style={{ flex: 1, borderRadius: 24, background: C.panel2, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Chevron dir="left" />
           </div>

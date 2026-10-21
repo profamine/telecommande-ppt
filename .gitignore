@@ -5,15 +5,21 @@ android/build/
 promo/out/
 promo/node_modules/
 
-# Clé de signature Android : à garder en privé (permet de publier des mises à jour de l'APK)
+# Clé de signature Android et son mot de passe : à garder en privé (et à sauvegarder !)
 *.keystore
 *.jks
+android/keystore.password
 
-# Fichiers binaires publiés dans les Releases GitHub (trop lourds pour le dépôt)
+# Fichiers binaires publiés ailleurs (Releases GitHub, Google Play)
 *.apk
+*.aab
 *.exe
+
+# Outils téléchargés par les scripts
+android/tools/
 
 # Divers
 .vercel/
 .claude/
 *.log
+*.idsig

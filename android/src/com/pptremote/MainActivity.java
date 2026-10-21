@@ -450,6 +450,22 @@ public class MainActivity extends Activity {
         LinearLayout root = vbox();
         root.setBackgroundColor(BG);
         root.setPadding(dp(16), dp(12), dp(16), dp(12));
+        // Android 15+ affiche l'app sous les barres système : on décale le contenu de leur hauteur
+        // (et de celle du clavier, pour le mode Wi-Fi où l'on saisit l'adresse et le PIN).
+        root.setOnApplyWindowInsetsListener((v, insets) -> {
+            int l, t, r, b;
+            if (Build.VERSION.SDK_INT >= 30) {
+                android.graphics.Insets bars = insets.getInsets(
+                        android.view.WindowInsets.Type.systemBars() | android.view.WindowInsets.Type.ime()
+                                | android.view.WindowInsets.Type.displayCutout());
+                l = bars.left; t = bars.top; r = bars.right; b = bars.bottom;
+            } else {
+                l = insets.getSystemWindowInsetLeft(); t = insets.getSystemWindowInsetTop();
+                r = insets.getSystemWindowInsetRight(); b = insets.getSystemWindowInsetBottom();
+            }
+            v.setPadding(dp(16) + l, dp(12) + t, dp(16) + r, dp(12) + b);
+            return insets;
+        });
 
         TextView title = text("Télécommande PPT", 20, TEXT);
         title.setTypeface(Typeface.DEFAULT_BOLD);
