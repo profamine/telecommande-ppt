@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Télécommande PPT — pilotez PowerPoint depuis votre téléphone</title>
+<title>Télécommande PPT par AMINE AMAHAN — pilotez PowerPoint depuis votre téléphone</title>
 <meta name="description" content="Application gratuite pour piloter vos présentations PowerPoint depuis un téléphone ou une tablette : Wi-Fi ou Bluetooth, notes du présentateur, pointeur laser, chrono. Réalisé par AMINE AMAHAN.">
 <meta name="author" content="AMINE AMAHAN">
 <meta name="theme-color" content="#111318">
 <meta property="og:title" content="Télécommande PPT">
 <meta property="og:description" content="Pilotez PowerPoint depuis votre téléphone : Wi-Fi ou Bluetooth, notes, pointeur laser, chrono.">
-<meta property="og:image" content="https://telecommande-ppt.online/assets/app-windows.jpg">
+<meta property="og:image" content="https://telecommande-ppt.online/assets/interface-windows-v2.jpg">
 <meta property="og:url" content="https://telecommande-ppt.online/">
 <meta property="og:type" content="website">
 <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
@@ -62,7 +62,9 @@
   .reqs { margin-top: 18px; font-size: 14px; color: var(--muted); }
   .shots { position: relative; min-height: 420px; }
   .shots picture { display: block; }
-  .shots .win { border-radius: 16px; border: 1px solid var(--line); box-shadow: 0 30px 80px rgba(0,0,0,.55); width: 100%; }
+  /* Proportions verrouillées : l'image ne peut pas être étirée, quelle que soit la largeur */
+  .shots .win { border-radius: 16px; border: 1px solid var(--line); box-shadow: 0 30px 80px rgba(0,0,0,.55);
+    width: 100%; height: auto; aspect-ratio: 2080 / 1400; object-fit: contain; background: #111318; }
   .shots .phone { position: absolute; right: -10px; bottom: -30px; width: 34%; border-radius: 28px; border: 6px solid #05060a;
     box-shadow: 0 30px 70px rgba(0,0,0,.6), 0 0 0 2px #2c313c; }
   @media (max-width: 900px) { .shots { min-height: 0; margin-bottom: 40px; } .shots .phone { right: 4px; width: 24%; bottom: -40px; border-width: 4px; border-radius: 20px; } }
@@ -115,6 +117,22 @@
   .note { max-width: 680px; margin: 26px auto 0; font-size: 14px; color: var(--muted); }
   .note b { color: var(--text); }
 
+  /* Auteur */
+  .author { display: inline-flex; align-items: center; gap: 12px; margin-top: 26px; padding: 8px 18px 8px 8px;
+    border-radius: 99px; background: var(--panel); border: 1px solid var(--line); }
+  .avatar { width: 42px; height: 42px; border-radius: 50%; flex: none; display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, var(--accent), #ff9a5c); color: #fff; font-weight: 800; font-size: 16px; letter-spacing: .02em; }
+  .author small { display: block; color: var(--muted); font-size: 12px; line-height: 1.2; }
+  .author strong { font-size: 16px; letter-spacing: .04em; }
+  .brand small { display: block; font-size: 11px; font-weight: 600; color: var(--accent); letter-spacing: .06em; line-height: 1; }
+  .creator { display: grid; grid-template-columns: auto 1fr; gap: 34px; align-items: center; background: var(--panel);
+    border: 1px solid var(--line); border-radius: 28px; padding: 40px; }
+  @media (max-width: 700px) { .creator { grid-template-columns: 1fr; text-align: center; } .creator .avatar { margin: 0 auto; } }
+  .creator .avatar { width: 132px; height: 132px; font-size: 46px; box-shadow: 0 20px 50px rgba(232,100,60,.35); }
+  .creator .label { color: var(--accent); font-weight: 700; font-size: 13px; letter-spacing: .12em; text-transform: uppercase; }
+  .creator h2 { font-size: clamp(34px, 5vw, 54px); letter-spacing: .06em; margin: 6px 0 10px; }
+  .creator p { margin: 0; color: var(--muted); font-size: 17px; max-width: 640px; }
+
   footer { border-top: 1px solid var(--line); padding: 34px 0; color: var(--muted); font-size: 15px; }
   footer .wrap { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; justify-content: space-between; }
   footer b { color: var(--accent); }
@@ -124,7 +142,7 @@
 
 <nav>
   <div class="wrap">
-    <a class="brand" href="#"><img src="assets/icon.svg" alt="">Télécommande PPT</a>
+    <a class="brand" href="#"><img src="assets/icon.svg" alt=""><span>Télécommande PPT<small>par AMINE AMAHAN</small></span></a>
     <div class="links">
       <a href="#fonctionnalites">Fonctionnalités</a>
       <a href="#modes">Wi-Fi &amp; Bluetooth</a>
@@ -152,13 +170,17 @@
         </a>
       </div>
       <p class="reqs">Fonctionne avec Microsoft PowerPoint sur Windows · aucun compte, aucune publicité</p>
+      <a class="author" href="#createur">
+        <span class="avatar">AA</span>
+        <span><small>Conçu et développé par</small><strong>AMINE AMAHAN</strong></span>
+      </a>
     </div>
     <div class="shots">
       <picture>
-        <source srcset="assets/app-windows.webp" type="image/webp">
-        <img class="win" src="assets/app-windows.jpg" alt="Fenêtre de l'application Télécommande PPT sur Windows, avec QR code et état de PowerPoint" width="2080" height="1400">
+        <source srcset="assets/interface-windows-v2.webp" type="image/webp">
+        <img class="win" src="assets/interface-windows-v2.jpg" alt="Fenêtre de l'application Télécommande PPT sur Windows, avec QR code et état de PowerPoint" width="2080" height="1400">
       </picture>
-      <img class="phone" src="assets/app-android-wifi.jpg" alt="Télécommande sur le téléphone : aperçu de la diapositive et notes" loading="lazy">
+      <img class="phone" src="assets/android-wifi-v2.jpg" alt="Télécommande sur le téléphone : aperçu de la diapositive et notes" loading="lazy">
     </div>
   </div>
 </header>
@@ -208,7 +230,7 @@
             <li>Connexion par simple QR code</li>
           </ul>
         </div>
-        <img src="assets/app-android-wifi.jpg" alt="Mode Wi-Fi sur le téléphone" loading="lazy">
+        <img src="assets/android-wifi-v2.jpg" alt="Mode Wi-Fi sur le téléphone" loading="lazy">
       </div>
       <div class="mode bt">
         <div>
@@ -221,7 +243,7 @@
             <li>Reconnexion automatique</li>
           </ul>
         </div>
-        <img src="assets/app-android-bt.jpg" alt="Mode Bluetooth sur le téléphone" loading="lazy">
+        <img src="assets/android-bt-v2.jpg" alt="Mode Bluetooth sur le téléphone" loading="lazy">
       </div>
     </div>
   </div>
@@ -263,6 +285,25 @@
       </div>
       <p class="note"><b>Windows :</b> l'installateur n'est pas encore signé. Si Windows affiche « Windows a protégé votre ordinateur », cliquez sur <b>Informations complémentaires › Exécuter quand même</b>.<br>
         <b>Android :</b> autorisez l'installation depuis des « sources inconnues » quand le téléphone le demande.</p>
+    </div>
+  </div>
+</section>
+
+<section id="createur" style="padding-top:0">
+  <div class="wrap">
+    <div class="creator">
+      <span class="avatar">AA</span>
+      <div>
+        <div class="label">Le créateur</div>
+        <h2>AMINE AMAHAN</h2>
+        <p>Télécommande PPT a été conçue et développée par AMINE AMAHAN : l'application Windows, l'application Android, ce site et la vidéo de présentation. Le code source est ouvert et disponible sur GitHub.</p>
+        <div class="actions" style="margin-top:22px">
+          <a class="btn" href="https://github.com/profamine" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.52-1.33-1.28-1.69-1.28-1.69-1.05-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.42-2.69 5.39-5.26 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5z"/></svg>
+            <span>github.com/profamine</span>
+          </a>
+        </div>
+      </div>
     </div>
   </div>
 </section>
