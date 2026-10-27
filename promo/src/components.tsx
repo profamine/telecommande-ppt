@@ -91,7 +91,17 @@ const StatusBar: React.FC = () => (
   </div>
 );
 
-const AppHeader: React.FC<{ tab: 'bt' | 'wifi' }> = ({ tab }) => (
+// « btonly » : en-tête de l'application PPT Bluetooth (pas d'onglets, badge bleu)
+const AppHeader: React.FC<{ tab: 'bt' | 'wifi' | 'btonly' }> = ({ tab }) => tab === 'btonly' ? (
+  <div style={{ padding: '6px 26px 0' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+      <div style={{ fontSize: 32, fontWeight: 700, color: C.text }}>Télécommande PPT</div>
+      <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', background: '#2F6BFF', borderRadius: 99, padding: '3px 12px' }}>Bluetooth</div>
+    </div>
+    <div style={{ fontSize: 17, fontWeight: 700, color: C.accent, marginTop: -2 }}>Réalisé par : {AUTHOR}</div>
+    <div style={{ fontSize: 16, color: C.muted, marginTop: 6 }}>Fonctionne sans Wi-Fi et sans rien installer sur le PC.</div>
+  </div>
+) : (
   <div style={{ padding: '6px 26px 0' }}>
     <div style={{ fontSize: 32, fontWeight: 700, color: C.text }}>Télécommande PPT</div>
     <div style={{ fontSize: 17, fontWeight: 700, color: C.accent, marginTop: -4 }}>Réalisé par : {AUTHOR}</div>
@@ -147,8 +157,8 @@ export const usePress = (taps: number[]) => {
   return { press, ripple };
 };
 
-export const BtRemoteScreen: React.FC<{ taps: number[]; timerFrom?: number; laser?: boolean; gyro?: boolean }> = ({
-  taps, timerFrom = 0, laser = false, gyro = false,
+export const BtRemoteScreen: React.FC<{ taps: number[]; timerFrom?: number; laser?: boolean; gyro?: boolean; btOnly?: boolean }> = ({
+  taps, timerFrom = 0, laser = false, gyro = false, btOnly = false,
 }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
@@ -158,7 +168,7 @@ export const BtRemoteScreen: React.FC<{ taps: number[]; timerFrom?: number; lase
   return (
     <div style={{ fontFamily: FONT, height: '100%', display: 'flex', flexDirection: 'column' }}>
       <StatusBar />
-      <AppHeader tab="bt" />
+      <AppHeader tab={btOnly ? 'btonly' : 'bt'} />
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '16px 26px 30px', gap: 14 }}>
         <div style={{ background: C.panel, borderRadius: 18, padding: '12px 18px', color: C.ok, fontSize: 17, fontWeight: 600 }}>
           ● Connecté — PowerPoint au premier plan

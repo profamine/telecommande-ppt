@@ -23,3 +23,5 @@ android/tools/
 .claude/
 *.log
 *.idsig
+android-bluetooth/build/
+android-bluetooth/build/

@@ -27,6 +27,52 @@ export const FeatureGraphic: React.FC = () => (
   </AbsoluteFill>
 );
 
+// ---------------------------------------------------------------- application PPT Bluetooth
+
+const BLUE = '#2F6BFF';
+
+const BtAppIcon: React.FC<{ size: number }> = ({ size }) => (
+  <svg width={size} height={size} viewBox="0 0 64 64">
+    <rect width="64" height="64" rx="14" fill={BLUE} />
+    <rect x="12" y="14" width="40" height="26" rx="3" fill="none" stroke="#fff" strokeWidth="4" />
+    <path d="M27 22l10 8-5 4V18l5 4-10 8" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M24 48h16" stroke="#fff" strokeWidth="4" strokeLinecap="round" />
+    <circle cx="46" cy="46" r="6" fill={C.accent} />
+  </svg>
+);
+
+export const BtFeatureGraphic: React.FC = () => (
+  <AbsoluteFill style={{ background: C.bg, fontFamily: FONT, overflow: 'hidden' }}>
+    <Background />
+    <AbsoluteFill style={{ background: 'radial-gradient(circle at 75% 40%, rgba(47,107,255,.35), transparent 55%)' }} />
+    <div style={{ position: 'absolute', left: 64, top: 0, bottom: 0, width: 580, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
+        <BtAppIcon size={84} />
+        <div style={{ color: C.text, fontSize: 46, fontWeight: 900, lineHeight: 1.05 }}>Télécommande PPT<br /><span style={{ color: '#7FA6FF' }}>Bluetooth</span></div>
+      </div>
+      <div style={{ color: C.text, fontSize: 32, fontWeight: 700, lineHeight: 1.25, marginTop: 28 }}>
+        Pilotez <span style={{ color: C.accent }}>PowerPoint</span><br />sans Wi-Fi, sans logiciel
+      </div>
+      <div style={{ color: C.muted, fontSize: 21, fontWeight: 600, marginTop: 14 }}>Clavier + souris Bluetooth · Pointeur laser · Chrono</div>
+    </div>
+    <div style={{ position: 'absolute', right: 70, top: 46 }}>
+      <Phone scale={0.62} style={{ transformOrigin: 'top right' }}>
+        <BtRemoteScreen taps={[]} btOnly />
+      </Phone>
+    </div>
+  </AbsoluteFill>
+);
+
+const PairStep: React.FC<{ n: number; title: string; text: string }> = ({ n, title, text }) => (
+  <div style={{ display: 'flex', gap: 28, alignItems: 'flex-start', background: C.panel, border: `2px solid ${C.panel2}`, borderRadius: 36, padding: '38px 40px', width: 900 }}>
+    <div style={{ flex: 'none', width: 92, height: 92, borderRadius: 46, background: BLUE, color: '#fff', fontSize: 50, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{n}</div>
+    <div>
+      <div style={{ color: C.text, fontSize: 44, fontWeight: 900 }}>{title}</div>
+      <div style={{ color: C.muted, fontSize: 32, fontWeight: 600, marginTop: 8, lineHeight: 1.35 }}>{text}</div>
+    </div>
+  </div>
+);
+
 // ---------------------------------------------------------------- captures
 
 const Shot: React.FC<{ title: string; sub: string; children: React.ReactNode }> = ({ title, sub, children }) => (
@@ -58,6 +104,28 @@ export const Shot2: React.FC = () => (
 export const Shot3: React.FC = () => (
   <Shot title="Un vrai pointeur laser" sub="Au doigt ou en visant l'écran avec le gyroscope">
     <Phone scale={1.08} style={{ transformOrigin: 'top center' }}><BtRemoteScreen taps={[]} laser /></Phone>
+  </Shot>
+);
+
+export const BtShot1: React.FC = () => (
+  <Shot title="Sans Wi-Fi, en Bluetooth" sub="Changez de diapo d'un geste, même quand le réseau est saturé">
+    <Phone scale={1.08} style={{ transformOrigin: 'top center' }}><BtRemoteScreen taps={[]} btOnly /></Phone>
+  </Shot>
+);
+
+export const BtShot2: React.FC = () => (
+  <Shot title="Un vrai pointeur laser" sub="Au doigt ou en visant l'écran avec le gyroscope">
+    <Phone scale={1.08} style={{ transformOrigin: 'top center' }}><BtRemoteScreen taps={[]} btOnly laser /></Phone>
+  </Shot>
+);
+
+export const BtShot3: React.FC = () => (
+  <Shot title="Rien à installer sur le PC" sub="Le téléphone devient un clavier et une souris Bluetooth">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 34, alignItems: 'center', marginTop: 40 }}>
+      <PairStep n={1} title="Rendre visible" text="Dans l'application, touchez « Rendre visible »." />
+      <PairStep n={2} title="Associer depuis le PC" text="Paramètres › Bluetooth › Ajouter un appareil, puis choisissez le téléphone." />
+      <PairStep n={3} title="Présentez" text="Diapos, laser, écran noir, chrono : tout se pilote du téléphone." />
+    </div>
   </Shot>
 );
 
