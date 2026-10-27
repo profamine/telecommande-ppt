@@ -6,8 +6,8 @@ $ErrorActionPreference = 'Stop'
 
 # ---- Version et identité de l'application (à augmenter à chaque envoi sur Google Play) ----
 $appId       = 'com.amineamahan.telecommandeppt'
-$versionCode = '5'
-$versionName = '1.4'
+$versionCode = '6'
+$versionName = '1.4.1'
 $minSdk      = '28'
 $targetSdk   = '36'
 $bundletoolVersion = '1.18.3'
